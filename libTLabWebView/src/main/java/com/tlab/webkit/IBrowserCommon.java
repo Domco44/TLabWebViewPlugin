@@ -23,5 +23,7 @@ public interface IBrowserCommon {
      */
     void SetIntentFilters(String[] intentFilters);
 
+    void SetWhitelistedHosts(String[] whitelistedHosts);
+
     void PostDialogResult(int result, String json);
 }

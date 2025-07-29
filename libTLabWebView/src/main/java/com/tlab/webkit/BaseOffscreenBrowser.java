@@ -41,12 +41,18 @@ public abstract class BaseOffscreenBrowser extends BaseOffscreenFragment impleme
 
     protected String[] mIntentFilters;
 
+    protected String[] mWhitelistedHosts;
+
     protected final Common.PageGoState mPageGoState = new Common.PageGoState();
 
     protected View mView;
 
     public void SetIntentFilters(String[] intentFilters) {
         mIntentFilters = intentFilters;
+    }
+
+    public void SetWhitelistedHosts(String[] whitelistedHosts) {
+        mWhitelistedHosts = whitelistedHosts;
     }
 
     public int GetScrollX() {
@@ -154,5 +160,20 @@ public abstract class BaseOffscreenBrowser extends BaseOffscreenFragment impleme
             mView.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, keyCode));
             mView.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, keyCode));
         });
+    }
+
+    protected boolean IsWhitelisted(String host) {
+        if (mWhitelistedHosts != null && mWhitelistedHosts.length > 0 && host != null) {
+            for (String whitelistedHost : mWhitelistedHosts) {
+                if (host.endsWith(whitelistedHost)) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        // consider host whitelisted when no whitelisted hosts are provided
+        return true;
     }
 }

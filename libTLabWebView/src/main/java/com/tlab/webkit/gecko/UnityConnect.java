@@ -253,6 +253,11 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
             Log.d(TAG, "onLoadRequest: " + request.uri);
             String url = request.uri;
 
+            String host = Uri.parse(url).getHost();
+            if (!IsWhitelisted(host)) {
+                return GeckoResult.fromValue(AllowOrDeny.DENY);
+            }
+
             if (mIntentFilters != null) {
                 for (String intentFilter : mIntentFilters) {
                     Pattern pattern = Pattern.compile(intentFilter);
@@ -480,6 +485,12 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
         final Activity a = UnityPlayer.currentActivity;
         a.runOnUiThread(() -> {
             if (mWebView == null) return;
+
+            String host = Uri.parse(url).getHost();
+            if (!IsWhitelisted(host)) {
+                return;
+            }
+
             if (mIntentFilters != null) {
                 for (String intentFilter : mIntentFilters) {
                     Pattern pattern = Pattern.compile(intentFilter);

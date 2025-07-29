@@ -65,7 +65,8 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
 
         /**
          * Stores the result of processing in the result queue
-         * @param id Result Id
+         *
+         * @param id     Result Id
          * @param result Result of processing
          */
         @JavascriptInterface
@@ -90,8 +91,9 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
 
         /**
          * Send a message to a Game Object on Unity
-         * @param go name of GameObject
-         * @param method Method name (a class with a matching method must be attached to the GameObject)
+         *
+         * @param go      name of GameObject
+         * @param method  Method name (a class with a matching method must be attached to the GameObject)
          * @param message Message to be sent
          */
         @JavascriptInterface
@@ -101,6 +103,7 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
 
         /**
          * Send a message to Unity type. The sent message is handled by the receiving WebView instance.
+         *
          * @param message Message to be sent
          */
         @JavascriptInterface
@@ -110,7 +113,8 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
 
         /**
          * Prepare Byte Buffer on the Java side. This is mainly used when sending large data from the javascript side to Java.
-         * @param key buffer identifier
+         *
+         * @param key        buffer identifier
          * @param bufferSize Buffer size
          * @return Whether the buffer has been successfully secured
          */
@@ -127,6 +131,7 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
 
         /**
          * Release the reserved buffer
+         *
          * @param key buffer identifier
          */
         @JavascriptInterface
@@ -137,7 +142,8 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
 
         /**
          * Write data sent from javascript to buffer on java side
-         * @param key buffer identifier
+         *
+         * @param key   buffer identifier
          * @param bytes Data to be written
          */
         @JavascriptInterface
@@ -155,7 +161,8 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
          * the converted data url from javascript to a buffer on the Java side. In this case, it is
          * necessary to call malloc(), write(), and free() from javascript, but the functions and the
          * buffer list are separated to avoid conflicts of buffer identifiers between plugin users.
-         * @param url Blob url (buffer identifier)
+         *
+         * @param url        Blob url (buffer identifier)
          * @param bufferSize Buffer size
          * @return Whether the buffer has been successfully secured
          */
@@ -189,9 +196,10 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
         /**
          * After converting a blob url to a data url, call this process.
          * The data url already written to the buffer on the java side is downloaded to local storage.
-         * @param url Blob url (buffer identifier)
+         *
+         * @param url                Blob url (buffer identifier)
          * @param contentDisposition contentDisposition
-         * @param mimetype mimetype
+         * @param mimetype           mimetype
          */
         @JavascriptInterface
         public void fetchBlob(String url, String contentDisposition, String mimetype) {
@@ -363,6 +371,11 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
 
                     if (mWebView != null)
                         mPageGoState.update(mWebView.canGoBack(), mWebView.canGoForward());
+
+                    String host = uri.getHost();
+                    if (!IsWhitelisted(host)) {
+                        return true;
+                    }
 
                     if (mIntentFilters != null) {
                         for (String intentFilter : mIntentFilters) {
@@ -594,14 +607,13 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
     }
 
     /**
-     *
      * @param requestCode The integer request code originally supplied to
      *                    startActivityForResult(), allowing you to identify who this
      *                    result came from.
-     * @param resultCode The integer result code returned by the child activity
-     *                   through its setResult().
-     * @param data An Intent, which can return result data to the caller
-     *               (various data can be attached to Intent "extras").
+     * @param resultCode  The integer result code returned by the child activity
+     *                    through its setResult().
+     * @param data        An Intent, which can return result data to the caller
+     *                    (various data can be attached to Intent "extras").
      */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -653,6 +665,7 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
 
     /**
      * Asynchronously evaluates JavaScript in the context of the currently displayed page.
+     *
      * @param js javascript
      */
     public void EvaluateJS(String js) {
@@ -667,8 +680,9 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
      * Asynchronously evaluates JavaScript in the context of the currently displayed page.
      * The javascript executed from this function should send the result of the execution
      * to the result queue using the result Id passed as argument.
+     *
      * @param varNameOfResultId Variable name to store Result Id
-     * @param js javascript
+     * @param js                javascript
      * @return Result Id (identifier on result queue
      */
     public int EvaluateJSForResult(String varNameOfResultId, String js) {
@@ -681,6 +695,7 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
     /**
      * Start download event.
      * Supported URL schemes include (https, http, data, blob)
+     *
      * @param url                The full url to the content that should be downloaded
      * @param userAgent          The user agent to be used for the download
      * @param contentDisposition Content-disposition http header, if present
@@ -737,6 +752,7 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
 
     /**
      * Change the user agent used
+     *
      * @param ua     UserAgent string
      * @param reload If true, reload web page when userAgent is updated.
      */
@@ -760,6 +776,7 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
      * The user agent retrieval must be performed on the Java plugin's UI thread,
      * so it will not be performed synchronously when called from Unity.
      * Therefore, the result Id is returned from this function.
+     *
      * @return Result Id
      */
     public int GetUserAgent() {
@@ -776,6 +793,7 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
 
     /**
      * Get the currently loaded URL
+     *
      * @return Get the currently loaded URL
      */
     public String GetUrl() {
@@ -785,12 +803,18 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
     /**
      * Loads the given URL.
      * Also see compatibility note on EvaluateJavascript(String).
+     *
      * @param url The URL of the resource to load.
      */
     public void LoadUrl(String url) {
         final Activity a = UnityPlayer.currentActivity;
         a.runOnUiThread(() -> {
             if (mWebView == null) return;
+
+            String host = Uri.parse(url).getHost();
+            if (!IsWhitelisted(host)) {
+                return;
+            }
 
             if (mIntentFilters != null) {
                 for (String intentFilter : mIntentFilters) {
@@ -853,7 +877,8 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
     /**
      * Loads the given data into this WebView, using baseUrl as the base URL for the content.
      * The base URL is used both to resolve relative URLs and when applying JavaScript's same origin policy.
-     * @param html A String of data in the given encoding This value cannot be null.
+     *
+     * @param html    A String of data in the given encoding This value cannot be null.
      * @param baseURL The URL to use as the page's base URL. If null defaults to 'about:blank'.
      */
     public void LoadHtml(final String html, final String baseURL) {
